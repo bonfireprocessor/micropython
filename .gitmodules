@@ -59,3 +59,6 @@
 [submodule "lib/protobuf-c"]
 	path = lib/protobuf-c
 	url = https://github.com/protobuf-c/protobuf-c.git
+[submodule "lib/bonfire-software"]
+	path = lib/bonfire-software
+	url = https://github.com/bonfireprocessor/bonfire-software.git
