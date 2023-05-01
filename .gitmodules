@@ -68,3 +68,6 @@
 [submodule "lib/arduino-lib"]
 	path = lib/arduino-lib
 	url = https://github.com/arduino/arduino-lib-mpy.git
+[submodule "lib/bonfire-software"]
+	path = lib/bonfire-software
+	url = https://github.com/bonfireprocessor/bonfire-software.git
