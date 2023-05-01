@@ -108,6 +108,11 @@ void MP_WEAK __assert_func(const char *file, int line, const char *func, const c
 }
 #endif
 
+mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs) {
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
+
 #if MICROPY_MIN_USE_CORTEX_CPU
 
 // this is a minimal IRQ and reset framework for any Cortex-M CPU
