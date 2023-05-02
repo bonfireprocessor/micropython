@@ -45,6 +45,9 @@ CSUPEROPT = -Os # save some code space
 # Flags for optional C++ source code
 CXXFLAGS += $(filter-out -std=c99,$(CFLAGS))
 
+
+MICROPY_ROM_TEXT_COMPRESSION = 0
+
 LIBS += -lm
 
 SRC_C = \
@@ -59,11 +62,7 @@ SRC_C = \
 
 SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c
 
-# ifeq ($(CROSS), 1)
-# SRC_C += shared/libc/string0.c
-# endif
 
-# SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c
 
 OBJ += $(PY_CORE_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
