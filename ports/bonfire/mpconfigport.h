@@ -1,5 +1,8 @@
 #include <stdint.h>
 
+
+#define MICROPY_DEBUG_VERBOSE (0)
+
 // options to control how MicroPython is built
 
 // Use the minimal starting configuration (disables all optional features).
@@ -47,8 +50,7 @@ typedef long mp_off_t;
 #define MICROPY_HW_BOARD_NAME "Bonfire Generic"
 #define MICROPY_HW_MCU_NAME "Bonfire CPU"
 
-#define MICROPY_HEAP_SIZE (8192*1024)
-
+#define MICROPY_HEAP_SIZE (16384*1024)
 
 
 #define MP_STATE_PORT MP_STATE_VM
