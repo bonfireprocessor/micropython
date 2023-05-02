@@ -7,8 +7,21 @@
 #include "py/runtime.h"
 #include "py/repl.h"
 #include "py/gc.h"
+#include "py/stackctrl.h"
 #include "py/mperrno.h"
 #include "shared/runtime/pyexec.h"
+
+
+#include <stdarg.h>
+
+int  DEBUG_printf(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+}
+
 
 #if MICROPY_ENABLE_COMPILER
 void do_str(const char *src, mp_parse_input_kind_t input_kind) {
@@ -30,24 +43,35 @@ void do_str(const char *src, mp_parse_input_kind_t input_kind) {
 
 void write_console(char *p);
 
-static char *stack_top;
-#if MICROPY_ENABLE_GC
-static char heap[MICROPY_HEAP_SIZE];
-#endif
+// static char *stack_top;
+// #if MICROPY_ENABLE_GC
+// static char heap[MICROPY_HEAP_SIZE];
+// #endif
+
+extern uint32_t _stacktop;
+extern uint32_t _endofheap;
+extern uint32_t _end;
+
 
 int main(int argc, char **argv) {
 
-    write_console("Start\n");
+   
 
-    int stack_dummy;
-    stack_top = (char *)&stack_dummy;
+    // int stack_dummy;
+    // stack_top = (char *)&stack_dummy;
   
+    void * start_heap = (uint32_t) &_end;
+    void * end_heap = start_heap + MICROPY_HEAP_SIZE;
+    printf("Stack top %p\n",&_stacktop);
+    mp_stack_set_top(&_stacktop);
+    //mp_stack_set_limit(&(_stacktop)  - end_heap);
 
-    #if MICROPY_ENABLE_GC
-    gc_init(heap, heap + sizeof(heap));
-    #endif
+    // GC init
+    printf("Set heap  %p..%p\n",start_heap,end_heap);
+    gc_init(start_heap,end_heap);
+
     mp_init();
-     write_console("after mp_init\n");
+
     #if MICROPY_ENABLE_COMPILER
     #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
@@ -75,7 +99,7 @@ void gc_collect(void) {
     // pointers from CPU registers, and thus may function incorrectly.
     void *dummy;
     gc_collect_start();
-    gc_collect_root(&dummy, ((mp_uint_t)stack_top - (mp_uint_t)&dummy) / sizeof(mp_uint_t));
+    gc_collect_root(&dummy, ((mp_uint_t)&_stacktop - (mp_uint_t)&dummy) / sizeof(mp_uint_t));
     gc_collect_end();
     gc_dump_info(&mp_plat_print);
 }
@@ -182,97 +206,3 @@ void _start(void) {
 
 #endif
 
-#if MICROPY_MIN_USE_STM32_MCU
-
-// this is minimal set-up code for an STM32 MCU
-
-typedef struct {
-    volatile uint32_t CR;
-    volatile uint32_t PLLCFGR;
-    volatile uint32_t CFGR;
-    volatile uint32_t CIR;
-    uint32_t _1[8];
-    volatile uint32_t AHB1ENR;
-    volatile uint32_t AHB2ENR;
-    volatile uint32_t AHB3ENR;
-    uint32_t _2;
-    volatile uint32_t APB1ENR;
-    volatile uint32_t APB2ENR;
-} periph_rcc_t;
-
-typedef struct {
-    volatile uint32_t MODER;
-    volatile uint32_t OTYPER;
-    volatile uint32_t OSPEEDR;
-    volatile uint32_t PUPDR;
-    volatile uint32_t IDR;
-    volatile uint32_t ODR;
-    volatile uint16_t BSRRL;
-    volatile uint16_t BSRRH;
-    volatile uint32_t LCKR;
-    volatile uint32_t AFR[2];
-} periph_gpio_t;
-
-typedef struct {
-    volatile uint32_t SR;
-    volatile uint32_t DR;
-    volatile uint32_t BRR;
-    volatile uint32_t CR1;
-} periph_uart_t;
-
-#define USART1 ((periph_uart_t *)0x40011000)
-#define GPIOA  ((periph_gpio_t *)0x40020000)
-#define GPIOB  ((periph_gpio_t *)0x40020400)
-#define RCC    ((periph_rcc_t *)0x40023800)
-
-// simple GPIO interface
-#define GPIO_MODE_IN (0)
-#define GPIO_MODE_OUT (1)
-#define GPIO_MODE_ALT (2)
-#define GPIO_PULL_NONE (0)
-#define GPIO_PULL_UP (0)
-#define GPIO_PULL_DOWN (1)
-void gpio_init(periph_gpio_t *gpio, int pin, int mode, int pull, int alt) {
-    gpio->MODER = (gpio->MODER & ~(3 << (2 * pin))) | (mode << (2 * pin));
-    // OTYPER is left as default push-pull
-    // OSPEEDR is left as default low speed
-    gpio->PUPDR = (gpio->PUPDR & ~(3 << (2 * pin))) | (pull << (2 * pin));
-    gpio->AFR[pin >> 3] = (gpio->AFR[pin >> 3] & ~(15 << (4 * (pin & 7)))) | (alt << (4 * (pin & 7)));
-}
-#define gpio_get(gpio, pin) ((gpio->IDR >> (pin)) & 1)
-#define gpio_set(gpio, pin, value) do { gpio->ODR = (gpio->ODR & ~(1 << (pin))) | (value << pin); } while (0)
-#define gpio_low(gpio, pin) do { gpio->BSRRH = (1 << (pin)); } while (0)
-#define gpio_high(gpio, pin) do { gpio->BSRRL = (1 << (pin)); } while (0)
-
-void stm32_init(void) {
-    // basic MCU config
-    RCC->CR |= (uint32_t)0x00000001; // set HSION
-    RCC->CFGR = 0x00000000; // reset all
-    RCC->CR &= (uint32_t)0xfef6ffff; // reset HSEON, CSSON, PLLON
-    RCC->PLLCFGR = 0x24003010; // reset PLLCFGR
-    RCC->CR &= (uint32_t)0xfffbffff; // reset HSEBYP
-    RCC->CIR = 0x00000000; // disable IRQs
-
-    // leave the clock as-is (internal 16MHz)
-
-    // enable GPIO clocks
-    RCC->AHB1ENR |= 0x00000003; // GPIOAEN, GPIOBEN
-
-    // turn on an LED! (on pyboard it's the red one)
-    gpio_init(GPIOA, 13, GPIO_MODE_OUT, GPIO_PULL_NONE, 0);
-    gpio_high(GPIOA, 13);
-
-    // enable UART1 at 9600 baud (TX=B6, RX=B7)
-    gpio_init(GPIOB, 6, GPIO_MODE_ALT, GPIO_PULL_NONE, 7);
-    gpio_init(GPIOB, 7, GPIO_MODE_ALT, GPIO_PULL_NONE, 7);
-    RCC->APB2ENR |= 0x00000010; // USART1EN
-    USART1->BRR = (104 << 4) | 3; // 16MHz/(16*104.1875) = 9598 baud
-    USART1->CR1 = 0x0000200c; // USART enable, tx enable, rx enable
-}
-
-#endif
-
-
-// void __register_exitproc() {
-//     write_console("register exit proc\n");
-// }
