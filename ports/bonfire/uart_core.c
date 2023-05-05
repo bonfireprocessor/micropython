@@ -40,12 +40,12 @@ void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
 }
 
 
-void write_console(char *p)
-{
-   while (*p) {
-    if (*p=='\n') writechar('\r');
-    writechar(*p);
-    p++;
-  }
+// void write_console(char *p)
+// {
+//    while (*p) {
+//     if (*p=='\n') writechar('\r');
+//     writechar(*p);
+//     p++;
+//   }
 
-}
+// }

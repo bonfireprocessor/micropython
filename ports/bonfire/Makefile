@@ -23,6 +23,7 @@ INC += -I.
 INC += -I$(TOP)
 INC += -I$(BUILD)
 INC += $(INCLUDES)
+#INC += $(TOP)/lib/bonfire-software/gdb-stub
 
 
 DFU = $(TOP)/tools/dfu.py
@@ -57,8 +58,14 @@ SRC_C = \
 	shared/readline/readline.c \
 	shared/runtime/pyexec.c \
 	shared/runtime/stdout_helpers.c \
-	$(BUILD)/_frozen_mpy.c 
+	lib/bonfire-software/gdb-stub/console.c \
+	lib/bonfire-software/gdb-stub/riscv-gdb-stub.c \
+	lib/bonfire-software/gdb-stub/trap.c \
+	lib/bonfire-software/gdb-stub/gdb_interface.c \
+	$(BUILD)/_frozen_mpy.c
 
+SRC_S = \
+	lib/bonfire-software/gdb-stub/gdb_traps.S \
 
 SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c
 
@@ -67,6 +74,7 @@ SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c
 OBJ += $(PY_CORE_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_CXX:.cpp=.o))
+OBJ += $(addprefix $(BUILD)/, $(SRC_S:.S=.o))
 
 
 all: $(BUILD)/firmware.elf $(BUILD)/firmware.bin
