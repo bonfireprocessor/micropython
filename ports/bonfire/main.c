@@ -10,6 +10,7 @@
 #include "py/stackctrl.h"
 #include "py/mperrno.h"
 #include "shared/runtime/pyexec.h"
+#include "lib/bonfire-software/gdb-stub/riscv-gdb-stub.h"
 
 
 #include <stdarg.h>
@@ -20,6 +21,7 @@ int  DEBUG_printf(const char *format, ...)
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
+    return 0;
 }
 
 
@@ -53,6 +55,16 @@ extern uint32_t _endofheap;
 extern uint32_t _end;
 
 
+#define BAUDRATE (500000)
+
+void start_debugger() {
+   printf("Run with baudrate %d\n",BAUDRATE);
+   gdb_setup_interface(BAUDRATE);
+   gdb_initDebugger(1);
+   gdb_breakpoint();
+}
+
+
 int main(int argc, char **argv) {
 
    
@@ -60,7 +72,9 @@ int main(int argc, char **argv) {
     // int stack_dummy;
     // stack_top = (char *)&stack_dummy;
   
-    void * start_heap = (uint32_t) &_end;
+    start_debugger();
+
+    void * start_heap = (void*) &_end;
     void * end_heap = start_heap + MICROPY_HEAP_SIZE;
     printf("Stack top %p\n",&_stacktop);
     mp_stack_set_top(&_stacktop);
