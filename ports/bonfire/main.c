@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     // int stack_dummy;
     // stack_top = (char *)&stack_dummy;
   
-    start_debugger();
+    //start_debugger();
 
     void * start_heap = (void*) &_end;
     void * end_heap = start_heap + MICROPY_HEAP_SIZE;
