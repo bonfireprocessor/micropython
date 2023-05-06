@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 
+
 #define MICROPY_DEBUG_VERBOSE (0)
 
 // options to control how MicroPython is built
@@ -32,8 +33,9 @@
 #define MICROPY_ERROR_REPORTING (MICROPY_ERROR_REPORTING_DETAILED)
 #define MICROPY_PY_BUILTINS_HELP  (1)
 #define MICROPY_PY_BUILTINS_HELP_MODULES (1)
-#define MICROPY_PY_MICROPYTHON_MEM_INFO (1)
+#define MICROPY_PY_MICROPYTHON_MEM_INFO  (1)
 #define MICROPY_PY_MICROPYTHON_STACK_USE (1)
+#define MICROPY_PY_MACHINE               (1)
 
 #define MICROPY_ALLOC_PATH_MAX            (256)
 #define MICROPY_ALLOC_PARSE_CHUNK_INIT    (16)
@@ -51,6 +53,11 @@ typedef long mp_off_t;
 #define MICROPY_HW_MCU_NAME "Bonfire CPU"
 
 #define MICROPY_HEAP_SIZE (16384*1024)
+
+#include "mphalport.h"
+
+#define MICROPY_BEGIN_ATOMIC_SECTION()     mp_hal_disable_irq()
+#define MICROPY_END_ATOMIC_SECTION(state)  mp_hal_enable_irq(state)
 
 
 #define MP_STATE_PORT MP_STATE_VM

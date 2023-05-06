@@ -63,12 +63,13 @@ SRC_C = \
 	lib/bonfire-software/gdb-stub/trap.c \
 	lib/bonfire-software/gdb-stub/gdb_interface.c \
 	modbonfire.c \
+	modmachine.c \
 	$(BUILD)/_frozen_mpy.c
 
 SRC_S = \
 	lib/bonfire-software/gdb-stub/gdb_traps.S \
 
-SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c  modbonfire.c
+SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c  modbonfire.c modmachine.c
 
 
 
