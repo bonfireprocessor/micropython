@@ -53,6 +53,7 @@ typedef long mp_off_t;
 #define MICROPY_HW_MCU_NAME "Bonfire CPU"
 
 #define MICROPY_HEAP_SIZE (16384*1024)
+//#define MICROPY_STACK_SIZE (256*1024) // 256K Stack
 
 #include "mphalport.h"
 

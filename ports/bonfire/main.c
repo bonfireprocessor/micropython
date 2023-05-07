@@ -10,7 +10,9 @@
 #include "py/stackctrl.h"
 #include "py/mperrno.h"
 #include "shared/runtime/pyexec.h"
+#include "shared/runtime/gchelper.h"
 #include "lib/bonfire-software/gdb-stub/riscv-gdb-stub.h"
+#include  "lib/bonfire-software/gdb-stub/console.h"
 
 
 #include <stdarg.h>
@@ -49,10 +51,10 @@ void write_console(char *p);
 // #if MICROPY_ENABLE_GC
 // static char heap[MICROPY_HEAP_SIZE];
 // #endif
-
-extern uint32_t _stacktop;
+ 
 extern uint32_t _endofheap;
 extern uint32_t _end;
+
 
 
 #define BAUDRATE (500000)
@@ -68,16 +70,21 @@ void start_debugger() {
 int main(int argc, char **argv) {
 
    
-
-    // int stack_dummy;
-    // stack_top = (char *)&stack_dummy;
-  
     //start_debugger();
 
+    int stack_dummy;
+    char *stack_top = (char *)&stack_dummy;
+  
     void * start_heap = (void*) &_end;
+
+    #ifdef MICROPY_HEAP_SIZE
     void * end_heap = start_heap + MICROPY_HEAP_SIZE;
-    printf("Stack top %p\n",&_stacktop);
-    mp_stack_set_top(&_stacktop);
+    #else
+    void * end_heap = ((void*) stack_top) - MICROPY_STACK_SIZE;
+    #endif 
+
+    printf("Stack top %p\n",stack_top);
+    mp_stack_set_top(stack_top);
     //mp_stack_set_limit(&(_stacktop)  - end_heap);
 
     // GC init
@@ -108,12 +115,31 @@ int main(int argc, char **argv) {
 }
 
 #if MICROPY_ENABLE_GC
+
+
+typedef struct  {
+    uint32_t s_reg[12]; // Save S0..S11
+
+} rv32_gc_helper_regs_t;
+
+
+void rv32_gc_helper_get_regs(rv32_gc_helper_regs_t *regs); // Implemented in gc_helper.S
+
+MP_NOINLINE void rv32_gc_helper_collect_regs_and_stack(void) {
+    rv32_gc_helper_regs_t regs;
+    rv32_gc_helper_get_regs(&regs);
+    // GC stack (and regs because we captured them)
+    void **regs_ptr = (void **)(void *)&regs;
+    //uint32_t fuck = ((uintptr_t)MP_STATE_THREAD(stack_top) - (uintptr_t)&regs);
+    gc_collect_root(regs_ptr, ((uintptr_t)MP_STATE_THREAD(stack_top) - (uintptr_t)&regs)  / sizeof(uintptr_t));
+}
+
+
+
 void gc_collect(void) {
-    // WARNING: This gc_collect implementation doesn't try to get root
-    // pointers from CPU registers, and thus may function incorrectly.
-    void *dummy;
+   
     gc_collect_start();
-    gc_collect_root(&dummy, ((mp_uint_t)&_stacktop - (mp_uint_t)&dummy) / sizeof(mp_uint_t));
+    rv32_gc_helper_collect_regs_and_stack();    
     gc_collect_end();
     gc_dump_info(&mp_plat_print);
 }
@@ -128,15 +154,11 @@ mp_import_stat_t mp_import_stat(const char *path) {
 }
 
 void nlr_jump_fail(void *val) {
-    while (1) {
-        ;
-    }
+    do_panic("nlr_jump_fail %lx\n",(uint32_t)val);
 }
 
 void NORETURN __fatal_error(const char *msg) {
-    while (1) {
-        ;
-    }
+    do_panic(msg);
 }
 
 #ifndef NDEBUG
