@@ -68,6 +68,7 @@ SRC_C = \
 
 SRC_S = \
 	lib/bonfire-software/gdb-stub/gdb_traps.S \
+	gc_helper.S
 
 SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c  modbonfire.c modmachine.c
 
