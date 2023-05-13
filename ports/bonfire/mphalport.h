@@ -18,6 +18,7 @@ static inline long mp_hal_get_cpu_freq() {
 }
 
 
+
 static inline uint64_t mp_hal_sys_raw_read()
 {
 #if __riscv_xlen == 32
