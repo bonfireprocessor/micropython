@@ -36,6 +36,11 @@
 #define MICROPY_PY_MICROPYTHON_MEM_INFO  (1)
 #define MICROPY_PY_MICROPYTHON_STACK_USE (1)
 #define MICROPY_PY_MACHINE               (1)
+#define MICROPY_VFS                             (1)
+#define MICROPY_VFS_LFS2                        (1)
+#define MICROPY_ENABLE_FINALISER (1)
+#define MICROPY_PY_UOS (1)
+//#define MICROPY_VFS_FAT                         (1)
 
 #define MICROPY_ALLOC_PATH_MAX            (256)
 #define MICROPY_ALLOC_PARSE_CHUNK_INIT    (16)

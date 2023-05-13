@@ -51,6 +51,18 @@ MICROPY_ROM_TEXT_COMPRESSION = 0
 
 LIBS += -lm
 
+SRC_VFS = \
+	extmod/vfs.c \
+	extmod/vfs_lfs.c \
+	extmod/vfs_lfsx.c \
+	extmod/vfs_lfsx_file.c \
+	extmod/vfs_blockdev.c
+	# extmod/vfs_fat_diskio.c \
+	# extmod/vfs_fat_file.c \
+	# extmod/vfs_lfs.c \
+	# extmod/vfs_lfsx.c
+
+
 SRC_C = \
 	main.c \
 	uart_core.c \
@@ -58,20 +70,31 @@ SRC_C = \
 	shared/readline/readline.c \
 	shared/runtime/pyexec.c \
 	shared/runtime/stdout_helpers.c \
+	extmod/moduos.c \
 	lib/bonfire-software/gdb-stub/console.c \
 	lib/bonfire-software/gdb-stub/riscv-gdb-stub.c \
 	lib/bonfire-software/gdb-stub/trap.c \
 	lib/bonfire-software/gdb-stub/gdb_interface.c \
+	lib/bonfire-software/bonfire-boot/spiflash_driver/src/spiflash.c \
 	modbonfire.c \
 	modmachine.c \
+	bonfire_flash.c \
+	bonfire_spi.c \
+	lib/littlefs/lfs2.c \
+	lib/littlefs/lfs2_util.c \
 	$(BUILD)/_frozen_mpy.c
+
+SRC_C += $(SRC_VFS)
 
 SRC_S = \
 	lib/bonfire-software/gdb-stub/gdb_traps.S \
 	gc_helper.S
 
-SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c  modbonfire.c modmachine.c
+SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c \
+            modbonfire.c modmachine.c bonfire_flash.c \
+			extmod/moduos.c
 
+SRC_QSTR += $(SRC_VFS)
 
 
 OBJ += $(PY_CORE_O)
