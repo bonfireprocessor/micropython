@@ -149,9 +149,25 @@ mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     mp_raise_OSError(MP_ENOENT);
 }
 
-mp_import_stat_t mp_import_stat(const char *path) {
+
+// mp_import_stat_t mp_vfs_import_stat(const char *path)
+// {
+//     return MP_IMPORT_STAT_NO_EXIST;
+// }
+
+
+#if  !(MICROPY_VFS)
+
+static inline mp_import_stat_t mp_import_stat(const char *path) {
     return MP_IMPORT_STAT_NO_EXIST;
 }
+
+mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs) {
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
+
+#endif 
 
 void nlr_jump_fail(void *val) {
     do_panic("nlr_jump_fail %lx\n",(uint32_t)val);
@@ -168,10 +184,10 @@ void MP_WEAK __assert_func(const char *file, int line, const char *func, const c
 }
 #endif
 
-mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs) {
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
+uint64_t mp_hal_time_ns(void) {
+  return 0;
+}  
+
 
 #if MICROPY_MIN_USE_CORTEX_CPU
 

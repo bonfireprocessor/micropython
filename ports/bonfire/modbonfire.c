@@ -1,4 +1,5 @@
 #include "py/runtime.h"
+#include "modbonfire.h"
 
 #include "lib/bonfire-software/gdb-stub/riscv-gdb-stub.h"
 
@@ -30,7 +31,8 @@ STATIC const mp_rom_map_elem_t bonfire_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_bonfire) },
     { MP_ROM_QSTR(MP_QSTR_info), MP_ROM_PTR(&bonfire_info_obj) },
     { MP_ROM_QSTR(MP_QSTR_start_debugger), MP_ROM_PTR(&bonfire_start_debugger_obj) },
-    { MP_ROM_QSTR(MP_QSTR_breakpoint), MP_ROM_PTR(&bonfire_breakpoint_obj) }
+    { MP_ROM_QSTR(MP_QSTR_breakpoint), MP_ROM_PTR(&bonfire_breakpoint_obj) },
+    { MP_ROM_QSTR(MP_QSTR_Flash),  MP_ROM_PTR(&bonfire_flash_type) }
 };
 STATIC MP_DEFINE_CONST_DICT(bonfire_module_globals, bonfire_module_globals_table);
 
