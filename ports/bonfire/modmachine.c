@@ -38,6 +38,7 @@
 
 #include "bonfire.h"
 #include "modmachine.h"
+#include  "mphalport.h"
 
 //#include "uart.h"
 
@@ -60,14 +61,10 @@ STATIC mp_obj_t machine_soft_reset(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_soft_reset_obj, machine_soft_reset);
 
-STATIC mp_obj_t machine_reset(void) {
+NORETURN mp_obj_t machine_reset(void) {
 
-     write_csr(mie,0); // Disable all interrupts
-     clear_csr(mstatus,MSTATUS_MIE);
-     // Jump to Firmware
-     void (*sram_base)() = (void*)SRAM_BASE;
-     sram_base();
-     return mp_const_none; // will never be reached 
+      mp_hal_reboot();
+      while(1); // Dummy statement
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_obj, machine_reset);
 
@@ -79,11 +76,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_cause_obj, machine_reset_cause);
 
 
 NORETURN mp_obj_t machine_bootloader(size_t n_args, const mp_obj_t *args) {
-    write_csr(mie,0); // Disable all interrupts    
-    clear_csr(mstatus,MSTATUS_MIE);
-     // Jump to Firmware
-    void (*sram_base)() = (void*)SRAM_BASE;
-    sram_base();
+    mp_hal_reboot();
+    while(1);
 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(machine_bootloader_obj, 0, 1, machine_bootloader);

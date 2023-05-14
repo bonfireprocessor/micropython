@@ -1,6 +1,10 @@
 #define MICROPY_HW_BOARD_NAME       "Digilent ARTY A7-35"
 #define MICROPY_HW_MCU_NAME         "Bonfire"
 
+#ifndef BONFIRE_DEBUG_MAIN
+#define BONFIRE_DEBUG_MAIN (0)
+#endif 
+
 // #define MICROPY_HW_HAS_SWITCH       (1)
 // #define MICROPY_HW_HAS_FLASH        (1)
 // #define MICROPY_HW_ENABLE_RTC       (1)

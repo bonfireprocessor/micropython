@@ -1,0 +1,15 @@
+{
+    "deploy": [
+        "../deploy.md"
+    ],
+    "docs": "",
+    "features": [],
+    "images": [
+      
+    ],
+    "mcu": "bonfire",
+    "product": "Bonfire Arty",
+    "thumbnail": "",
+    "url": "",
+    "vendor": "bonfire project"
+}

@@ -1,5 +1,5 @@
 #include <stdint.h>
-
+#include "mpconfigboard.h"
 
 
 #define MICROPY_DEBUG_VERBOSE (0)
@@ -56,11 +56,17 @@ typedef long mp_off_t;
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
 
+#ifndef MICROPY_HW_BOARD_NAME
 #define MICROPY_HW_BOARD_NAME "Bonfire Generic"
+#endif
+#ifndef MICROPY_HW_MCU_NAME
 #define MICROPY_HW_MCU_NAME "Bonfire CPU"
+#endif
 
+#ifndef MICROPY_HEAP_SIZE
 #define MICROPY_HEAP_SIZE (16384*1024)
 //#define MICROPY_STACK_SIZE (256*1024) // 256K Stack
+#endif 
 
 #include "mphalport.h"
 

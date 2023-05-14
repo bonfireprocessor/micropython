@@ -69,8 +69,9 @@ void start_debugger() {
 
 int main(int argc, char **argv) {
 
-   
-    //start_debugger();
+    #if BONFIRE_DEBUG_MAIN
+    start_debugger();
+    #endif
 
     int stack_dummy;
     char *stack_top = (char *)&stack_dummy;
@@ -92,9 +93,10 @@ int main(int argc, char **argv) {
     gc_init(start_heap,end_heap);
 
     mp_init();
-
+    pyexec_frozen_module("_boot.py", false);
     #if MICROPY_ENABLE_COMPILER
     #if MICROPY_REPL_EVENT_DRIVEN
+   
     pyexec_event_repl_init();
     for (;;) {
         int c = mp_hal_stdin_rx_chr();
@@ -105,10 +107,6 @@ int main(int argc, char **argv) {
     #else
     pyexec_friendly_repl();
     #endif
-    // do_str("print('hello world!', list(x+1 for x in range(10)), end='eol\\n')", MP_PARSE_SINGLE_INPUT);
-    // do_str("for i in range(10):\r\n  print(i)", MP_PARSE_FILE_INPUT);
-    #else
-    pyexec_frozen_module("frozentest.py", false);
     #endif
     mp_deinit();
     return 0;
@@ -130,7 +128,6 @@ MP_NOINLINE void rv32_gc_helper_collect_regs_and_stack(void) {
     rv32_gc_helper_get_regs(&regs);
     // GC stack (and regs because we captured them)
     void **regs_ptr = (void **)(void *)&regs;
-    //uint32_t fuck = ((uintptr_t)MP_STATE_THREAD(stack_top) - (uintptr_t)&regs);
     gc_collect_root(regs_ptr, ((uintptr_t)MP_STATE_THREAD(stack_top) - (uintptr_t)&regs)  / sizeof(uintptr_t));
 }
 
@@ -184,9 +181,7 @@ void MP_WEAK __assert_func(const char *file, int line, const char *func, const c
 }
 #endif
 
-uint64_t mp_hal_time_ns(void) {
-  return 0;
-}  
+
 
 
 #if MICROPY_MIN_USE_CORTEX_CPU
