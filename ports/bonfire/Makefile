@@ -1,12 +1,21 @@
+BOARD ?= ARTY
+BOARD_DIR ?= boards/$(BOARD)
+ifeq ($(wildcard $(BOARD_DIR)/.),)
+$(error Invalid BOARD specified: $(BOARD_DIR))
+endif
+
+# If the build directory is not given, make it reflect the board name.
+BUILD ?= build-$(BOARD)
+
 include ../../py/mkenv.mk
 
-
+include $(BOARD_DIR)/mpconfigboard.mk
 
 # qstr definitions (must come before including py.mk)
 QSTR_DEFS = qstrdefsport.h
 
 # MicroPython feature configurations
-MICROPY_ROM_TEXT_COMPRESSION ?= 1
+MICROPY_ROM_TEXT_COMPRESSION ?= 0
 
 # include py core make definitions
 include $(TOP)/py/py.mk
@@ -32,7 +41,15 @@ PYDFU = $(TOP)/tools/pydfu.py
 CFLAGS += $(INC) $(TARGET_CFLAGS)
 LDFLAGS += $(TARGET_LDFLAGS_SYSCALL)
 
-CSUPEROPT = -Os # save some code space
+CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
+
+#CSUPEROPT = -Os # save some code space
+# ifneq ($(FROZEN_MANIFEST),)
+# $(info Frozen manifest found)
+# CFLAGS += -DMICROPY_QSTR_EXTRA_POOL=mp_qstr_frozen_const_pool
+# CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
+# CFLAGS += -DMICROPY_MODULE_FROZEN_STR
+# endif
 
 # Tune for Debugging or Optimization
 # CFLAGS += -g  # always include debug info in the ELF
@@ -45,9 +62,6 @@ CSUPEROPT = -Os # save some code space
 
 # Flags for optional C++ source code
 CXXFLAGS += $(filter-out -std=c99,$(CFLAGS))
-
-
-MICROPY_ROM_TEXT_COMPRESSION = 0
 
 LIBS += -lm
 
