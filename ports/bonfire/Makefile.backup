@@ -1,3 +1,5 @@
+
+
 BOARD ?= ARTY
 BOARD_DIR ?= boards/$(BOARD)
 ifeq ($(wildcard $(BOARD_DIR)/.),)
@@ -8,14 +10,14 @@ endif
 BUILD ?= build-$(BOARD)
 
 include ../../py/mkenv.mk
-
-include $(BOARD_DIR)/mpconfigboard.mk
+-include mpconfigport.mk
+#include $(BOARD_DIR)/mpconfigboard.mk
 
 # qstr definitions (must come before including py.mk)
 QSTR_DEFS = qstrdefsport.h
 
 # MicroPython feature configurations
-MICROPY_ROM_TEXT_COMPRESSION ?= 0
+MICROPY_ROM_TEXT_COMPRESSION ?= 1
 
 
 # include py core make definitions
@@ -23,9 +25,8 @@ include $(TOP)/py/py.mk
 
 BASE_DIR=$(TOP)/lib/bonfire-software
 include $(TOP)/lib/bonfire-software/bonfire_defs.Makefile.include
-
-
 CROSS_COMPILE ?= $(TARGET_PREFIX)-
+
 
 
 INC += -I.
@@ -35,21 +36,13 @@ INC += $(INCLUDES)
 #INC += $(TOP)/lib/bonfire-software/gdb-stub
 
 
-DFU = $(TOP)/tools/dfu.py
-PYDFU = $(TOP)/tools/pydfu.py
-
-CSUPEROPT = -Os # save some code space - is used for some files in py.mk
+#DFU = $(TOP)/tools/dfu.py
+#PYDFU = $(TOP)/tools/pydfu.py
 
 CFLAGS += $(INC) $(TARGET_CFLAGS)
 LDFLAGS += $(TARGET_LDFLAGS_SYSCALL)
 
-CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
-CFLAGS += -DMICROPY_QSTR_EXTRA_POOL=mp_qstr_frozen_const_pool
-
-ifneq ($(FROZEN_MANIFEST),)
-$(info Frozen manifest found $(FROZEN_MANIFEST) )
-CFLAGS += -DMICROPY_MODULE_FROZEN_STR
-endif
+#CSUPEROPT = -Os # save some code space
 
 # Tune for Debugging or Optimization
 # CFLAGS += -g  # always include debug info in the ELF
@@ -62,6 +55,15 @@ endif
 
 # Flags for optional C++ source code
 CXXFLAGS += $(filter-out -std=c99,$(CFLAGS))
+
+MICROPY_ROM_TEXT_COMPRESSION = 0
+
+# ifneq ($(FROZEN_MANIFEST),)
+# $(info Frozen manifest found)
+# CFLAGS += -DMICROPY_QSTR_EXTRA_POOL=mp_qstr_frozen_const_pool
+# CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
+# CFLAGS += -DMICROPY_MODULE_FROZEN_STR
+# endif
 
 LIBS += -lm
 
@@ -96,9 +98,7 @@ SRC_C = \
 	bonfire_spi.c \
 	lib/littlefs/lfs2.c \
 	lib/littlefs/lfs2_util.c \
-	$(BUILD)/frozen_content.c
-
-#$(BUILD)/_frozen_mpy.c \	
+	$(BUILD)/_frozen_mpy.c
 
 SRC_C += $(SRC_VFS)
 
