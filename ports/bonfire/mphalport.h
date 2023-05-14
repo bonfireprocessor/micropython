@@ -3,6 +3,7 @@
 
 #include "bonfire.h"
 #include "stdint.h"
+#include "mpconfigport.h"
 
 
 static inline mp_uint_t mp_hal_ticks_ms(void) {
@@ -34,30 +35,12 @@ static inline uint64_t mp_hal_sys_raw_read()
 
 }
 
-static inline void mp_hal_delay_ms(mp_uint_t delay) {
-   uint64_t wait_cylces = (SYSCLK /1000 * delay);   
-   uint64_t endcnt  = mp_hal_sys_raw_read() + wait_cylces;
+void mp_hal_delay_ms(mp_uint_t delay);
+void mp_hal_enable_irq(int state);
+int mp_hal_disable_irq();
+uint64_t mp_hal_time_ns(void);
 
-   while (mp_hal_sys_raw_read() < endcnt) {
-    ;
-   }
-}
-
-static inline void mp_hal_enable_irq(int state) {
-    
-    if (state)
-        set_csr(mstatus,MSTATUS_MIE); // Global Interrupt Enable
-    else
-        clear_csr(mstatus,MSTATUS_MIE); // Global Interrupt Diable
-}
-
-static inline int mp_hal_disable_irq() {
-
-     uint32_t m = read_csr(mstatus);
-     clear_csr(mstatus,MSTATUS_MIE);
-     return  (m & MSTATUS_MIE); // Return old status
-}
-
+void mp_hal_reboot();
 
 
 

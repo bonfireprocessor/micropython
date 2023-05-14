@@ -32,6 +32,7 @@ INC += -I.
 INC += -I$(TOP)
 INC += -I$(BUILD)
 INC += $(INCLUDES)
+INC += -I$(BOARD_DIR)
 #INC += $(TOP)/lib/bonfire-software/gdb-stub
 
 
@@ -41,7 +42,7 @@ PYDFU = $(TOP)/tools/pydfu.py
 CSUPEROPT = -Os # save some code space - is used for some files in py.mk
 
 CFLAGS += $(INC) $(TARGET_CFLAGS)
-LDFLAGS += $(TARGET_LDFLAGS_SYSCALL)
+LDFLAGS += $(TARGET_LDFLAGS_SYSCALL)  -Wl,-wrap=_exit
 
 CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
 CFLAGS += -DMICROPY_QSTR_EXTRA_POOL=mp_qstr_frozen_const_pool
@@ -92,6 +93,7 @@ SRC_C = \
 	lib/bonfire-software/bonfire-boot/spiflash_driver/src/spiflash.c \
 	modbonfire.c \
 	modmachine.c \
+	mphalport.c \
 	bonfire_flash.c \
 	bonfire_spi.c \
 	lib/littlefs/lfs2.c \
