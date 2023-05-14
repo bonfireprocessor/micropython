@@ -1,4 +1,4 @@
-def mount():
+def mountroot():
     import uos as o
     import bonfire as b
 
@@ -6,3 +6,6 @@ def mount():
     # f=b.Flash()
     # fs=o.VfsLfs2(f)
     # o.mount(fs,"/")
+
+print("_boot.py")
+mountroot()
