@@ -40,6 +40,13 @@ void mp_hal_enable_irq(int state);
 int mp_hal_disable_irq();
 uint64_t mp_hal_time_ns(void);
 
+mp_uint_t mp_hal_ticks_us(void);
+mp_uint_t mp_hal_ticks_cpu(void);
+void mp_hal_delay_us(mp_uint_t delay);
+
+
+void mp_hal_bonfire_setBaudRate(int b);
+
 void mp_hal_reboot();
 
 

@@ -39,13 +39,28 @@ void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
    }
 }
 
+static uint16_t l_divisor=0;
 
-// void write_console(char *p)
-// {
-//    while (*p) {
-//     if (*p=='\n') writechar('\r');
-//     writechar(*p);
-//     p++;
-//   }
+void _setDivisor(uint32_t divisor){
 
-// }
+   l_divisor = divisor;
+   uartadr[UART_CONTROL]= 0x030000L | (uint16_t)divisor; // Set Baudrate divisor and enable port and set extended mode
+}
+
+void setDivisor(uint32_t divisor)
+{
+    _setDivisor(divisor);
+}
+
+uint32_t getDivisor()
+{
+  return  uartadr[UART_CONTROL] & 0x0ffff ;
+}
+
+void mp_hal_bonfire_setBaudRate(int baudrate) {
+
+
+   setDivisor(SYSCLK / baudrate -1);
+}
+
+
