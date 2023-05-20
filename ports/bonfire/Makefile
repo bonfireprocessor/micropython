@@ -66,16 +66,7 @@ CXXFLAGS += $(filter-out -std=c99,$(CFLAGS))
 
 LIBS += -lm
 
-SRC_VFS = \
-	extmod/vfs.c \
-	extmod/vfs_lfs.c \
-	extmod/vfs_lfsx.c \
-	extmod/vfs_lfsx_file.c \
-	extmod/vfs_blockdev.c
-	# extmod/vfs_fat_diskio.c \
-	# extmod/vfs_fat_file.c \
-	# extmod/vfs_lfs.c \
-	# extmod/vfs_lfsx.c
+
 
 
 SRC_C = \
@@ -100,9 +91,11 @@ SRC_C = \
 	lib/littlefs/lfs2_util.c \
 	$(BUILD)/frozen_content.c
 
-#$(BUILD)/_frozen_mpy.c \	
 
-SRC_C += $(SRC_VFS)
+
+include $(TOP)/extmod/extmod.mk
+
+SRC_C += $(SRC_EXTMOD_C)
 
 SRC_S = \
 	lib/bonfire-software/gdb-stub/gdb_traps.S \
