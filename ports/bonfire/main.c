@@ -46,16 +46,11 @@ void do_str(const char *src, mp_parse_input_kind_t input_kind) {
 
 
 void write_console(char *p);
-
-// static char *stack_top;
-// #if MICROPY_ENABLE_GC
-// static char heap[MICROPY_HEAP_SIZE];
-// #endif
  
 extern uint32_t _endofheap;
 extern uint32_t _end;
 
-
+extern pyexec_mode_kind_t pyexec_mode_kind;
 
 #define BAUDRATE (500000)
 
@@ -84,6 +79,7 @@ int main(int argc, char **argv) {
     void * end_heap = ((void*) stack_top) - MICROPY_STACK_SIZE;
     #endif 
 
+soft_reset: 
     printf("Stack top %p\n",stack_top);
     mp_stack_set_top(stack_top);
     //mp_stack_set_limit(&(_stacktop)  - end_heap);
@@ -105,10 +101,27 @@ int main(int argc, char **argv) {
         }
     }
     #else
-    pyexec_friendly_repl();
+    while(1) {
+        int exitcode;
+        if (pyexec_mode_kind==PYEXEC_MODE_FRIENDLY_REPL) {
+            // mp_hal_bonfire_setBaudRate(500000);
+            exitcode = pyexec_friendly_repl();
+        } else {    
+            //mp_hal_bonfire_setBaudRate(115200);
+            exitcode = pyexec_raw_repl();
+        }
+         if (exitcode==PYEXEC_FORCED_EXIT) {
+            pyexec_mode_kind = PYEXEC_MODE_FRIENDLY_REPL;
+            break;
+        }
+    }    
     #endif
+  
     #endif
+    mp_printf(&mp_plat_print, "MPY: soft reboot\n");
+    gc_sweep_all();
     mp_deinit();
+    goto soft_reset;
     return 0;
 }
 
@@ -142,18 +155,21 @@ void gc_collect(void) {
 }
 #endif
 
+
+
+
+
+#if  !(MICROPY_VFS)
+
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     mp_raise_OSError(MP_ENOENT);
 }
 
+mp_import_stat_t mp_vfs_import_stat(const char *path)
+{
+    return MP_IMPORT_STAT_NO_EXIST;
+}
 
-// mp_import_stat_t mp_vfs_import_stat(const char *path)
-// {
-//     return MP_IMPORT_STAT_NO_EXIST;
-// }
-
-
-#if  !(MICROPY_VFS)
 
 static inline mp_import_stat_t mp_import_stat(const char *path) {
     return MP_IMPORT_STAT_NO_EXIST;

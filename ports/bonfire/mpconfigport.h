@@ -40,6 +40,7 @@
 #define MICROPY_PY_MACHINE               (1)
 #define MICROPY_VFS                             (1)
 #define MICROPY_VFS_LFS2                        (1)
+#define MICROPY_READER_VFS              (1)
 #define MICROPY_ENABLE_FINALISER (1)
 #define MICROPY_PY_UOS (1)
 //#define MICROPY_VFS_FAT                         (1)
@@ -52,6 +53,9 @@
 typedef intptr_t mp_int_t; // must be pointer size
 typedef uintptr_t mp_uint_t; // must be pointer size
 typedef long mp_off_t;
+
+// #include <limits.h>
+// #define SSIZE_MAX INT_MAX
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
