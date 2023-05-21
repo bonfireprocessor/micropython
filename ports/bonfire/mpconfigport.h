@@ -9,7 +9,7 @@
 // Use the minimal starting configuration (disables all optional features).
 //#define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_CORE_FEATURES)
 
-#define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_BASIC_FEATURES)
+#define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_EXTRA_FEATURES)
 
 // You can disable the built-in MicroPython compiler by setting the following
 // config option to 0.  If you do this then you won't get a REPL prompt, but you
@@ -43,6 +43,7 @@
 #define MICROPY_READER_VFS              (1)
 #define MICROPY_ENABLE_FINALISER (1)
 #define MICROPY_PY_UOS (1)
+#define MICROPY_PY_SYS_STDIO_BUFFER (1)
 //#define MICROPY_VFS_FAT                         (1)
 
 #define MICROPY_ALLOC_PATH_MAX            (256)
@@ -54,8 +55,8 @@ typedef intptr_t mp_int_t; // must be pointer size
 typedef uintptr_t mp_uint_t; // must be pointer size
 typedef long mp_off_t;
 
-// #include <limits.h>
-// #define SSIZE_MAX INT_MAX
+#include <limits.h>
+#define SSIZE_MAX INT_MAX
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>

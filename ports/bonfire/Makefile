@@ -76,6 +76,7 @@ SRC_C = \
 	shared/readline/readline.c \
 	shared/runtime/pyexec.c \
 	shared/runtime/stdout_helpers.c \
+	shared/runtime/sys_stdio_mphal.c \
 	extmod/moduos.c \
 	lib/bonfire-software/gdb-stub/console.c \
 	lib/bonfire-software/gdb-stub/riscv-gdb-stub.c \
@@ -102,6 +103,7 @@ SRC_S = \
 	gc_helper.S
 
 SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c \
+			shared/runtime/sys_stdio_mphal.c \
             modbonfire.c modmachine.c bonfire_flash.c \
 			extmod/moduos.c
 

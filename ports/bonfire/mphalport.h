@@ -49,6 +49,10 @@ void mp_hal_bonfire_setBaudRate(int b);
 
 void mp_hal_reboot();
 
+void _bonfire_poll_event_hook();
+
+#define MICROPY_EVENT_POLL_HOOK _bonfire_poll_event_hook();
+
 
 
 
