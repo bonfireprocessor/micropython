@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
     #endif
 
     int stack_dummy;
-    char *stack_top = (char *)&stack_dummy;
+    void *stack_top = (void *)&stack_dummy;
   
     void * start_heap = (void*) &_end;
 
@@ -82,14 +82,18 @@ int main(int argc, char **argv) {
 soft_reset: 
     printf("Stack top %p\n",stack_top);
     mp_stack_set_top(stack_top);
-    //mp_stack_set_limit(&(_stacktop)  - end_heap);
+    mp_stack_set_limit(stack_top  - end_heap);
 
     // GC init
     printf("Set heap  %p..%p\n",start_heap,end_heap);
     gc_init(start_heap,end_heap);
 
     mp_init();
-    pyexec_frozen_module("_boot.py", false);
+
+    #ifdef MICROPY_BOARD_FROZEN_BOOT_FILE
+    pyexec_frozen_module(MICROPY_BOARD_FROZEN_BOOT_FILE, false);
+    #endif 
+
     #if MICROPY_ENABLE_COMPILER
     #if MICROPY_REPL_EVENT_DRIVEN
    

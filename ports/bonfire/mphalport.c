@@ -71,3 +71,15 @@ void mp_hal_delay_us(mp_uint_t delay)
    }
 
 }
+
+
+
+void _bonfire_poll_event_hook() {
+//TODO: Check what to implement here
+}
+
+
+int mp_hal_stdio_poll() {
+   //TODO: Check what to implement here 
+   return 0;
+}

@@ -5,6 +5,10 @@
 #define BONFIRE_DEBUG_MAIN (0)
 #endif 
 
+#ifndef MICROPY_BOARD_FROZEN_BOOT_FILE
+#define MICROPY_BOARD_FROZEN_BOOT_FILE "_boot.py"
+#endif
+
 // #define MICROPY_HW_HAS_SWITCH       (1)
 // #define MICROPY_HW_HAS_FLASH        (1)
 // #define MICROPY_HW_ENABLE_RTC       (1)
