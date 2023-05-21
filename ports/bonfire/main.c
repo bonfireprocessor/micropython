@@ -114,9 +114,8 @@ soft_reset:
             //mp_hal_bonfire_setBaudRate(115200);
             exitcode = pyexec_raw_repl();
         }
-         if (exitcode==PYEXEC_FORCED_EXIT) {
-            pyexec_mode_kind = PYEXEC_MODE_FRIENDLY_REPL;
-            break;
+         if (exitcode==PYEXEC_FORCED_EXIT) {            
+            break; // Leave loop to prepare for Soft-Reboot
         }
     }    
     #endif

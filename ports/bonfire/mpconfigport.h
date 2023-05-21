@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "mpconfigboard.h"
 
+#define MICROPY_PY_SYS_PLATFORM ("pyboard")
 
 #define MICROPY_DEBUG_VERBOSE (0)
 
@@ -43,6 +44,8 @@
 #define MICROPY_READER_VFS              (1)
 #define MICROPY_ENABLE_FINALISER (1)
 #define MICROPY_PY_UOS (1)
+#define MICROPY_PY_UOS_UNAME (1)
+//#define MICROPY_PY_UOS_SYSTEM (1)
 #define MICROPY_PY_SYS_STDIO_BUFFER (1)
 //#define MICROPY_VFS_FAT                         (1)
 
