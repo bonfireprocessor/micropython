@@ -1,15 +1,17 @@
 
 #include "mphalport.h"
+#include "bonfire.h"
+#include "lib/bonfire-software/gdb-stub/trapframe.h"
+#include "lib/bonfire-software/gdb-stub/riscv-gdb-stub.h"
 
+#include "encoding.h"
 
-void mp_hal_delay_ms(mp_uint_t delay) {
-   uint64_t wait_cylces = (SYSCLK /1000 * delay);   
-   uint64_t endcnt  = mp_hal_sys_raw_read() + wait_cylces;
+#include "py/runtime.h"
+#include "systick.h"
 
-   while (mp_hal_sys_raw_read() < endcnt) {
-    ;
-   }
-}
+volatile uint32_t *pmtime = (uint32_t*)MTIME_BASE; // Pointer to memory mapped RISC-V Timer registers
+
+uint32_t tick_interval=0;
 
 
 void mp_hal_enable_irq(int state) {
@@ -72,6 +74,15 @@ void mp_hal_delay_us(mp_uint_t delay)
 
 }
 
+void mp_hal_delay_ms(mp_uint_t delay) {
+   uint64_t wait_cylces = (SYSCLK /1000 * delay);   
+   uint64_t endcnt  = mp_hal_sys_raw_read() + wait_cylces;
+
+   while (mp_hal_sys_raw_read() < endcnt) {
+    ;
+   }
+}
+
 
 
 void _bonfire_poll_event_hook() {
@@ -82,4 +93,63 @@ void _bonfire_poll_event_hook() {
 int mp_hal_stdio_poll() {
    //TODO: Check what to implement here 
    return 0;
+}
+
+
+uint32_t bonfire_mtime_setinterval(uint32_t interval)
+{
+// Implementation for 32 Bit timer in Bonfire. Need to be adapted in case of a 64Bit Timer
+
+   tick_interval=interval;
+
+   if (interval >0) {
+     pmtime[2]=pmtime[0]+interval;
+     set_csr(mie,MIP_MTIP); // Enable Timer Interrupt
+   } else {
+     clear_csr(mie,MIP_MTIP); // Disable Timer Interrupt
+
+   }
+   return tick_interval;
+}
+
+
+// implemented in gdbstub 
+extern void __trap();
+
+void bonfire_init_interrupts() {
+    write_csr(mtvec,__trap);
+    bonfire_mtime_setinterval(SYSCLK/1000); // Systick every 1us
+    mp_hal_enable_irq(1);
+}
+
+// Overload weak Trap Handler in gdb_stub
+
+trapframe_t* trap_handler(trapframe_t *ptf)
+{
+
+    if (ptf->cause & 0x80000000) {
+        switch (ptf->cause & 0x0ff) {
+             case 0x07:               
+               SysTick_Handler();
+               pmtime[2]=pmtime[0]+tick_interval;
+               break;
+            //  case 16+6: // Local Interrupt 6 (lxp irq_i(7))
+            //  case 16+5: // Local Interrupt 5 (lxp irq_i(6))
+            //    uart_irq_handler(ptf->cause & 0x0ff);
+            //    break;
+   
+
+   
+            //  case 0x0b:
+            //    ext_irq_handler();
+            //    break;
+   
+             default:
+                 mp_printf(&mp_plat_print,"Unexepted Interrupt cause %x\n",ptf->cause);
+          }
+
+          return ptf;
+    }  else {
+       return handle_exception(ptf);
+    }
 }

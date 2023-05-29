@@ -13,6 +13,7 @@
 #include "shared/runtime/gchelper.h"
 #include "lib/bonfire-software/gdb-stub/riscv-gdb-stub.h"
 #include  "lib/bonfire-software/gdb-stub/console.h"
+#include "mphalport.h"
 
 
 #include <stdarg.h>
@@ -89,6 +90,7 @@ soft_reset:
     gc_init(start_heap,end_heap);
 
     mp_init();
+    bonfire_init_interrupts();
 
     #ifdef MICROPY_BOARD_FROZEN_BOOT_FILE
     pyexec_frozen_module(MICROPY_BOARD_FROZEN_BOOT_FILE, false);
