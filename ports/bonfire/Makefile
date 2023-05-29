@@ -88,6 +88,7 @@ SRC_C = \
 	mphalport.c \
 	bonfire_flash.c \
 	bonfire_spi.c \
+	systick.c \
 	lib/littlefs/lfs2.c \
 	lib/littlefs/lfs2_util.c \
 	$(BUILD)/frozen_content.c
