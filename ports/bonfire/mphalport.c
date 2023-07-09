@@ -93,11 +93,6 @@ void _bonfire_poll_event_hook() {
 }
 
 
-int mp_hal_stdio_poll() {
-   //TODO: Check what to implement here 
-   return 0;
-}
-
 
 uint32_t bonfire_mtime_setinterval(uint32_t interval)
 {
