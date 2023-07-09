@@ -89,7 +89,7 @@ void mp_hal_delay_ms(mp_uint_t delay) {
 
 
 void _bonfire_poll_event_hook() {
-
+     mp_handle_pending(true);    
 }
 
 
