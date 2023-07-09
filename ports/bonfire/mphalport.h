@@ -62,4 +62,6 @@ void  bonfire_init_interrupts();
 #define raise_irq_pri(p) (1)
 #define restore_irq_pri(state) 
 
+#define __IO volatile
+
 #endif

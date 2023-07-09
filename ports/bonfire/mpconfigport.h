@@ -88,9 +88,9 @@ typedef long mp_off_t;
 
 // PENDSV Emulation
 #define IRQ_PRI_PENDSV          (1) // Dummy value
-#define MICROPY_PY_PENDSV_ENTER   //  uint32_t atomic_state = raise_irq_pri(IRQ_PRI_PENDSV);
-#define MICROPY_PY_PENDSV_REENTER // atomic_state = raise_irq_pri(IRQ_PRI_PENDSV);
-#define MICROPY_PY_PENDSV_EXIT    // restore_irq_pri(atomic_state);
+#define MICROPY_PY_PENDSV_ENTER     uint32_t atomic_state = disable_irq();
+#define MICROPY_PY_PENDSV_REENTER  atomic_state = disable_irq());
+#define MICROPY_PY_PENDSV_EXIT     enable_irq(atomic_state);
 
 
 #define MP_STATE_PORT MP_STATE_VM
