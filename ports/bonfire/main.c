@@ -14,6 +14,8 @@
 #include "lib/bonfire-software/gdb-stub/riscv-gdb-stub.h"
 #include  "lib/bonfire-software/gdb-stub/console.h"
 #include "mphalport.h"
+#include "pendsv.h"
+#include "shared/runtime/softtimer.h"
 
 
 #include <stdarg.h>
@@ -90,6 +92,7 @@ soft_reset:
     gc_init(start_heap,end_heap);
 
     mp_init();
+    pendsv_init();
     bonfire_init_interrupts();
 
     #ifdef MICROPY_BOARD_FROZEN_BOOT_FILE
@@ -124,7 +127,9 @@ soft_reset:
   
     #endif
     mp_printf(&mp_plat_print, "MPY: soft reboot\n");
+    soft_timer_gc_mark_all();
     gc_sweep_all();
+    soft_timer_deinit();
     mp_deinit();
     goto soft_reset;
     return 0;
@@ -155,7 +160,9 @@ void gc_collect(void) {
    
     gc_collect_start();
     rv32_gc_helper_collect_regs_and_stack();    
+    soft_timer_gc_mark_all();
     gc_collect_end();
+    
     gc_dump_info(&mp_plat_print);
 }
 #endif

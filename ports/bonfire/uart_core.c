@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include "py/mpconfig.h"
+#include "py/runtime.h"
 
 #include <bonfire.h>
 
@@ -18,7 +19,10 @@
 int mp_hal_stdin_rx_chr(void) {
 uint32_t rx_data;
 
-  while (!(uartadr[UART_STATUS] & 0x01)); // Wait while receive buffer empty
+  while (!(uartadr[UART_STATUS] & 0x01)) {
+        extern void mp_handle_pending(bool);
+        mp_handle_pending(true); 
+  }; // Wait while receive buffer empty
   rx_data=uartadr[UART_RECV]; 
   return (int)rx_data;
 }
