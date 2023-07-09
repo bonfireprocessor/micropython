@@ -39,6 +39,8 @@
 #define MICROPY_PY_MICROPYTHON_MEM_INFO  (1)
 #define MICROPY_PY_MICROPYTHON_STACK_USE (1)
 #define MICROPY_PY_MACHINE               (1)
+#define MICROPY_PY_MACHINE_TIMER (1)
+#define MICROPY_ENABLE_SCHEDULER (1)
 #define MICROPY_VFS                             (1)
 #define MICROPY_VFS_LFS2                        (1)
 #define MICROPY_READER_VFS              (1)
@@ -49,6 +51,7 @@
 #define MICROPY_PY_SYS_STDIO_BUFFER (1)
 //#define MICROPY_VFS_FAT                         (1)
 
+
 #define MICROPY_ALLOC_PATH_MAX            (256)
 #define MICROPY_ALLOC_PARSE_CHUNK_INIT    (16)
 
@@ -57,6 +60,8 @@
 typedef intptr_t mp_int_t; // must be pointer size
 typedef uintptr_t mp_uint_t; // must be pointer size
 typedef long mp_off_t;
+
+#define MICROPY_SOFT_TIMER_TICKS_MS uwTick
 
 #include <limits.h>
 #define SSIZE_MAX INT_MAX
@@ -78,8 +83,14 @@ typedef long mp_off_t;
 
 #include "mphalport.h"
 
-#define MICROPY_BEGIN_ATOMIC_SECTION()     mp_hal_disable_irq()
-#define MICROPY_END_ATOMIC_SECTION(state)  mp_hal_enable_irq(state)
+#define MICROPY_BEGIN_ATOMIC_SECTION()     disable_irq()
+#define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
+
+// PENDSV Emulation
+#define IRQ_PRI_PENDSV          (1) // Dummy value
+#define MICROPY_PY_PENDSV_ENTER   //  uint32_t atomic_state = raise_irq_pri(IRQ_PRI_PENDSV);
+#define MICROPY_PY_PENDSV_REENTER // atomic_state = raise_irq_pri(IRQ_PRI_PENDSV);
+#define MICROPY_PY_PENDSV_EXIT    // restore_irq_pri(atomic_state);
 
 
 #define MP_STATE_PORT MP_STATE_VM

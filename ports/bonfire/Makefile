@@ -77,6 +77,7 @@ SRC_C = \
 	shared/runtime/pyexec.c \
 	shared/runtime/stdout_helpers.c \
 	shared/runtime/sys_stdio_mphal.c \
+	shared/runtime/softtimer.c \
 	extmod/moduos.c \
 	lib/bonfire-software/gdb-stub/console.c \
 	lib/bonfire-software/gdb-stub/riscv-gdb-stub.c \
@@ -89,6 +90,7 @@ SRC_C = \
 	bonfire_flash.c \
 	bonfire_spi.c \
 	systick.c \
+	pendsv.c \
 	lib/littlefs/lfs2.c \
 	lib/littlefs/lfs2_util.c \
 	$(BUILD)/frozen_content.c

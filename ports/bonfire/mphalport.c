@@ -8,13 +8,16 @@
 
 #include "py/runtime.h"
 #include "systick.h"
+#include "pendsv.h"
 
 volatile uint32_t *pmtime = (uint32_t*)MTIME_BASE; // Pointer to memory mapped RISC-V Timer registers
 
 uint32_t tick_interval=0;
 
+ extern void mp_handle_pending(bool);
 
-void mp_hal_enable_irq(int state) {
+
+void enable_irq(int state) {
     
     if (state)
         set_csr(mstatus,MSTATUS_MIE); // Global Interrupt Enable
@@ -23,7 +26,7 @@ void mp_hal_enable_irq(int state) {
 }
 
 
-int mp_hal_disable_irq() {
+int disable_irq() {
 
      uint32_t m = read_csr(mstatus);
      clear_csr(mstatus,MSTATUS_MIE);
@@ -65,28 +68,28 @@ mp_uint_t mp_hal_ticks_cpu(void)
 
 void mp_hal_delay_us(mp_uint_t delay)
 {
-   uint64_t wait_cylces = (SYSCLK / 1000000) * delay;   
-   uint64_t endcnt  = mp_hal_sys_raw_read() + wait_cylces;
+  uint64_t wait_cylces = (SYSCLK / 1000000) * delay;   
+  uint64_t endcnt  = mp_hal_sys_raw_read() + wait_cylces;
 
-   while (mp_hal_sys_raw_read() < endcnt) {
-    ;
-   }
+  while (mp_hal_sys_raw_read() < endcnt) {
+    mp_handle_pending(true);
+  }
 
 }
 
 void mp_hal_delay_ms(mp_uint_t delay) {
-   uint64_t wait_cylces = (SYSCLK /1000 * delay);   
-   uint64_t endcnt  = mp_hal_sys_raw_read() + wait_cylces;
+  uint64_t wait_cylces = (SYSCLK /1000 * delay);   
+  uint64_t endcnt  = mp_hal_sys_raw_read() + wait_cylces;
 
-   while (mp_hal_sys_raw_read() < endcnt) {
-    ;
-   }
+  while (mp_hal_sys_raw_read() < endcnt) {
+     mp_handle_pending(true);
+  }
 }
 
 
 
 void _bonfire_poll_event_hook() {
-//TODO: Check what to implement here
+
 }
 
 
@@ -119,7 +122,7 @@ extern void __trap();
 void bonfire_init_interrupts() {
     write_csr(mtvec,__trap);
     bonfire_mtime_setinterval(SYSCLK/1000); // Systick every 1us
-    mp_hal_enable_irq(1);
+    enable_irq(1);
 }
 
 // Overload weak Trap Handler in gdb_stub
@@ -147,7 +150,7 @@ trapframe_t* trap_handler(trapframe_t *ptf)
              default:
                  mp_printf(&mp_plat_print,"Unexepted Interrupt cause %x\n",ptf->cause);
           }
-
+          pendsv_emulation();  
           return ptf;
     }  else {
        return handle_exception(ptf);

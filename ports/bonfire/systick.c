@@ -28,7 +28,7 @@
 #include "py/mphal.h"
 #include "shared/runtime/softtimer.h"
 //#include "irq.h"
-//#include "pendsv.h"
+#include "pendsv.h"
 #include "systick.h"
 //#include "pybthread.h"
 
@@ -51,9 +51,9 @@ void SysTick_Handler(void) {
         f(uw_tick);
     }
 
-    // if (soft_timer_next == uw_tick) {
-    //     pendsv_schedule_dispatch(PENDSV_DISPATCH_SOFT_TIMER, soft_timer_handler);
-    // }
+    if (soft_timer_next == uw_tick) {
+        pendsv_schedule_dispatch(PENDSV_DISPATCH_SOFT_TIMER, soft_timer_handler);
+    }
 
     #if MICROPY_PY_THREAD
     if (pyb_thread_enabled) {
