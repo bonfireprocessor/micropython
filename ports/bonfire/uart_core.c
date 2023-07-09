@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include "py/mpconfig.h"
 #include "py/runtime.h"
+#include "py/stream.h"
 
 #include <bonfire.h>
 
@@ -26,7 +27,22 @@ uint32_t rx_data;
   rx_data=uartadr[UART_RECV]; 
   return (int)rx_data;
 }
- 
+
+
+int mp_hal_stdio_poll(uint32_t poll_flags) {
+    uint32_t ret = 0;
+    if ((poll_flags & MP_STREAM_POLL_RD) && (uartadr[UART_STATUS] & 0x01)) {
+        
+        ret |= MP_STREAM_POLL_RD;
+    }
+    if ((poll_flags & MP_STREAM_POLL_WR) && (uartadr[UART_STATUS] & 0x2)) {
+        ret |= MP_STREAM_POLL_WR;
+    }
+    return ret;
+
+}
+
+
 static inline void writechar(char c)
 {
 
