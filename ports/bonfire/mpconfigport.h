@@ -39,6 +39,8 @@
 #define MICROPY_PY_MICROPYTHON_MEM_INFO  (1)
 #define MICROPY_PY_MICROPYTHON_STACK_USE (1)
 #define MICROPY_PY_MACHINE               (1)
+#define MICROPY_PY_MACHINE_BARE_METAL_FUNCS (1)
+#define MICROPY_PY_MACHINE_DISABLE_IRQ_ENABLE_IRQ (1)
 #define MICROPY_PY_MACHINE_TIMER (1)
 #define MICROPY_ENABLE_SCHEDULER (1)
 #define MICROPY_VFS                             (1)
@@ -94,3 +96,14 @@ typedef long mp_off_t;
 
 
 #define MP_STATE_PORT MP_STATE_VM
+
+// LFS Flash Address and size -- don't use the same lfs file system as the boot loeader 
+#define MICROPY_HW_FLASH_STORAGE_BASE (FLASH_IMAGEBASE+MAX_FLASH_IMAGESIZE) // Place after Boot FLASH_IMAGEBASE
+#define MICROPY_HW_FLASH_STORAGE_BYTES (FLASH_FSBASE-MICROPY_HW_FLASH_STORAGE_BASE) // Size is limited by boot loader fls
+
+#define LFS2_MULTIVERSION
+
+// Extra Machine Methods 
+
+
+#define MICROPY_PY_MACHINE_EXTRA_GLOBALS  { MP_ROM_QSTR(MP_QSTR_Timer),               MP_ROM_PTR(&machine_timer_type) }

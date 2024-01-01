@@ -78,14 +78,12 @@ SRC_C = \
 	shared/runtime/stdout_helpers.c \
 	shared/runtime/sys_stdio_mphal.c \
 	shared/runtime/softtimer.c \
-	extmod/moduos.c \
 	lib/bonfire-software/gdb-stub/console.c \
 	lib/bonfire-software/gdb-stub/riscv-gdb-stub.c \
 	lib/bonfire-software/gdb-stub/trap.c \
 	lib/bonfire-software/gdb-stub/gdb_interface.c \
 	lib/bonfire-software/bonfire-boot/spiflash_driver/src/spiflash.c \
 	modbonfire.c \
-	modmachine.c \
 	mphalport.c \
 	bonfire_flash.c \
 	bonfire_spi.c \
@@ -107,8 +105,8 @@ SRC_S = \
 
 SRC_QSTR += shared/readline/readline.c shared/runtime/pyexec.c \
 			shared/runtime/sys_stdio_mphal.c \
-            modbonfire.c modmachine.c bonfire_flash.c \
-			extmod/moduos.c
+            modbonfire.c bonfire_flash.c \
+			extmod/modos.c 	extmod/machine_mem.c
 
 SRC_QSTR += $(SRC_VFS)
 

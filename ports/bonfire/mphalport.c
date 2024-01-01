@@ -93,6 +93,10 @@ void _bonfire_poll_event_hook() {
 }
 
 
+void mp_machine_idle()
+{
+
+}
 
 uint32_t bonfire_mtime_setinterval(uint32_t interval)
 {
@@ -151,3 +155,43 @@ trapframe_t* trap_handler(trapframe_t *ptf)
        return handle_exception(ptf);
     }
 }
+
+/* Machine bare metal functions */
+
+ mp_obj_t mp_machine_unique_id(void) {
+    //pico_unique_board_id_t id;
+    //pico_get_unique_board_id(&id);
+    //return mp_obj_new_bytes(id.id, sizeof(id.id));
+    return mp_const_none;
+}
+
+void mp_machine_reset(void)
+{
+     mp_hal_reboot();
+}
+
+ mp_int_t mp_machine_reset_cause(void)
+ {
+    return 0;
+ }
+
+  mp_obj_t mp_machine_get_freq(void)
+  {
+      return MP_OBJ_NEW_SMALL_INT(mp_hal_get_cpu_freq());
+  }
+
+
+  void mp_machine_set_freq(size_t n_args, const mp_obj_t *args)
+  {
+
+  }
+
+  void mp_machine_lightsleep(size_t n_args, const mp_obj_t *args)
+  {
+
+  }
+
+  void mp_machine_deepsleep(size_t n_args, const mp_obj_t *args)
+  {
+    
+  }
