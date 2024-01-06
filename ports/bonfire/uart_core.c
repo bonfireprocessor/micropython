@@ -82,5 +82,3 @@ void mp_hal_bonfire_setBaudRate(int baudrate) {
 
    setDivisor(SYSCLK / baudrate -1);
 }
-
-
