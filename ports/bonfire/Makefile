@@ -7,6 +7,8 @@ endif
 # If the build directory is not given, make it reflect the board name.
 BUILD ?= build-$(BOARD)
 
+GIT_SUBMODULES += lib/bonfire-software lib/littlefs
+
 include ../../py/mkenv.mk
 
 include $(BOARD_DIR)/mpconfigboard.mk
@@ -17,7 +19,6 @@ QSTR_DEFS = qstrdefsport.h
 # MicroPython feature configurations
 MICROPY_ROM_TEXT_COMPRESSION ?= 0
 
-
 # include py core make definitions
 include $(TOP)/py/py.mk
 
@@ -26,6 +27,7 @@ include $(TOP)/lib/bonfire-software/bonfire_defs.Makefile.include
 
 
 CROSS_COMPILE ?= $(TARGET_PREFIX)-
+
 
 
 INC += -I.
