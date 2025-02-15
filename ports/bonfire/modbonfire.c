@@ -5,6 +5,7 @@
 
 extern void start_debugger();
 
+#define STATIC static
 
 STATIC mp_obj_t bonfire_info(void) {
     mp_printf(&mp_plat_print, "info about my port\n");
