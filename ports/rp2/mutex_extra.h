@@ -1,7 +1,9 @@
 /*
+ * This file is part of the MicroPython project, http://micropython.org/
+ *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Renesas Electronics Corporation
+ * Copyright (c) 2023 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +23,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef MICROPY_INCLUDED_RP2_MUTEX_EXTRA_H
+#define MICROPY_INCLUDED_RP2_MUTEX_EXTRA_H
 
-#include "hal_data.h"
-#include "ra_config.h"
-#include "ra_flash.h"
-#include "ra_int.h"
-#include "ra_init.h"
+#include "pico/mutex.h"
 
-void ra_init(void) {
-    ra_int_init();
-    SysTick_Config(MICROPY_HW_MCU_SYSCLK / 1000);
-    internal_flash_init();
-}
+uint32_t mutex_enter_blocking_and_disable_interrupts(mutex_t *mtx);
+void mutex_exit_and_restore_interrupts(mutex_t *mtx, uint32_t save);
 
-void ra_deinit(void) {
-    ra_int_init();
-}
+#endif // MICROPY_INCLUDED_RP2_MUTEX_EXTRA_H
