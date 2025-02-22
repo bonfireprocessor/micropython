@@ -34,6 +34,12 @@
 #include "py/misc.h"
 #include "py/persistentcode.h"
 
+#ifdef MICROPY_MICROPY_RV32_UNCOMPRESSED
+#pragma message "MICROPY_MICROPY_RV32_UNCOMPRESSED"
+#define __NO_RVC
+#endif
+
+
 #define ASM_RV32_REG_X0 (0)   // Zero
 #define ASM_RV32_REG_X1 (1)   // RA
 #define ASM_RV32_REG_X2 (2)   // SP
@@ -219,25 +225,42 @@ static inline void asm_rv32_opcode_bne(asm_rv32_t *state, mp_uint_t rs1, mp_uint
 // C.ADD RD, RS
 static inline void asm_rv32_opcode_cadd(asm_rv32_t *state, mp_uint_t rd, mp_uint_t rs) {
     // CR: 1001 ..... ..... 10
-    asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CR(0x02, 0x09, rd, rs));
+    #ifdef __NO_RVC
+        asm_rv32_opcode_add(state,rd,rd,rs);
+    #else    
+        asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CR(0x02, 0x09, rd, rs));
+    #endif    
 }
 
 // C.ADDI RD, IMMEDIATE
 static inline void asm_rv32_opcode_caddi(asm_rv32_t *state, mp_uint_t rd, mp_int_t immediate) {
     // CI: 000 . ..... ..... 01
-    asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CI(0x01, 0x00, rd, immediate));
+    #ifdef __NO_RVC
+        asm_rv32_opcode_addi(state,rd,rd,immediate);
+    #else    
+        asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CI(0x01, 0x00, rd, immediate));
+    #endif    
 }
 
 // C.ADDI4SPN RD', IMMEDIATE
 static inline void asm_rv32_opcode_caddi4spn(asm_rv32_t *state, mp_uint_t rd, mp_uint_t immediate) {
     // CIW: 000 ........ ... 00
-    asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CIW(0x00, 0x00, rd, immediate));
+    //#ifdef __NO_RVC
+    //    asm_rv32_opcode_addi(state,rd,ASM_RV32_REG_X2,immediate);
+    //#else
+        asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CIW(0x00, 0x00, rd, immediate));
+    //#endif    
 }
 
 // C.BEQZ RS', IMMEDIATE
 static inline void asm_rv32_opcode_cbeqz(asm_rv32_t *state, mp_uint_t rs, mp_int_t offset) {
     // CB: 110 ... ... ..... 01
-    asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CB(0x01, 0x06, rs, offset));
+    #ifdef __NO_RVC
+        asm_rv32_opcode_beq(state,rs,ASM_RV32_REG_X0,offset);
+    #else       
+        asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CB(0x01, 0x06, rs, offset));
+    #endif    
+            
 }
 
 // C.BNEZ RS', IMMEDIATE

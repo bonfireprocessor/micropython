@@ -135,11 +135,17 @@ static void load_upper_immediate(asm_rv32_t *state, mp_uint_t rd, mp_uint_t imme
     //   c.lui rd, HI(immediate)
     // else:
     //   lui   rd, HI(immediate)
+
+    #ifdef __NO_RVC
+    asm_rv32_opcode_lui(state, rd, immediate);
+    #else
+
     if (FIT_SIGNED(immediate, 17) && ((immediate >> 12) != 0)) {
-        asm_rv32_opcode_clui(state, rd, immediate);
-    } else {
-        asm_rv32_opcode_lui(state, rd, immediate);
-    }
+            asm_rv32_opcode_clui(state, rd, immediate);
+        } else {
+            asm_rv32_opcode_lui(state, rd, immediate);
+        }
+    #endif 
 }
 
 static void load_lower_immediate(asm_rv32_t *state, mp_uint_t rd, mp_uint_t immediate) {
@@ -155,11 +161,16 @@ static void load_lower_immediate(asm_rv32_t *state, mp_uint_t rd, mp_uint_t imme
     //   c.addi rd, LO(immediate)
     // else:
     //   addi   rd, rd, LO(immediate)
+
+    #ifdef __NO_RVC
+    asm_rv32_opcode_addi(state, rd, rd, immediate);
+    #else
     if (FIT_SIGNED(immediate, 6)) {
         asm_rv32_opcode_caddi(state, rd, immediate);
     } else {
         asm_rv32_opcode_addi(state, rd, rd, immediate);
     }
+    #endif 
 }
 
 static void load_full_immediate(asm_rv32_t *state, mp_uint_t rd, mp_int_t immediate) {
@@ -180,11 +191,14 @@ static void load_full_immediate(asm_rv32_t *state, mp_uint_t rd, mp_int_t immedi
 }
 
 void asm_rv32_emit_optimised_load_immediate(asm_rv32_t *state, mp_uint_t rd, mp_int_t immediate) {
+
+    #ifndef __NO_RVC
     if (FIT_SIGNED(immediate, 6)) {
         // c.li rd, immediate
         asm_rv32_opcode_cli(state, rd, immediate);
         return;
     }
+    #endif 
 
     if (FIT_SIGNED(immediate, 12)) {
         // addi rd, zero, immediate
@@ -204,7 +218,11 @@ static void emit_registers_store(asm_rv32_t *state, mp_uint_t registers_mask) {
         if (registers_mask & (1U << register_index)) {
             assert(FIT_UNSIGNED(offset >> 2, 6) && "Registers save stack offset out of range.");
             // c.swsp register, offset
-            asm_rv32_opcode_cswsp(state, register_index, offset);
+            #ifdef __NO_RVC
+                asm_rv32_opcode_sw(state,register_index,ASM_RV32_REG_SP,offset);
+            #else
+                asm_rv32_opcode_cswsp(state, register_index, offset);
+            #endif    
             offset += sizeof(uint32_t);
         }
     }
@@ -216,7 +234,11 @@ static void emit_registers_load(asm_rv32_t *state, mp_uint_t registers_mask) {
         if (registers_mask & (1U << register_index)) {
             assert(FIT_UNSIGNED(offset >> 2, 6) && "Registers load stack offset out of range.");
             // c.lwsp register, offset
-            asm_rv32_opcode_clwsp(state, register_index, offset);
+            #ifdef __NO_RVC
+                asm_rv32_opcode_lw(state,register_index,ASM_RV32_REG_SP,offset);
+            #else
+                asm_rv32_opcode_clwsp(state, register_index, offset);
+            #endif    
             offset += sizeof(uint32_t);
         }
     }
@@ -227,11 +249,13 @@ static void adjust_stack(asm_rv32_t *state, mp_int_t stack_size) {
         return;
     }
 
+    #ifndef __NO_RVC
     if (FIT_SIGNED(stack_size, 6)) {
         // c.addi sp, stack_size
         asm_rv32_opcode_caddi(state, ASM_RV32_REG_SP, stack_size);
         return;
     }
+    #endif 
 
     if (FIT_SIGNED(stack_size, 12)) {
         // addi sp, sp, stack_size
@@ -241,8 +265,9 @@ static void adjust_stack(asm_rv32_t *state, mp_int_t stack_size) {
 
     // li    temporary, stack_size
     // c.add sp, temporary
-    load_full_immediate(state, REG_TEMP0, stack_size);
+    load_full_immediate(state, REG_TEMP0, stack_size);   
     asm_rv32_opcode_cadd(state, ASM_RV32_REG_SP, REG_TEMP0);
+   
 }
 
 // Generate a generic function entry prologue code sequence, setting up the
@@ -290,7 +315,11 @@ void asm_rv32_entry(asm_rv32_t *state, mp_uint_t locals) {
 void asm_rv32_exit(asm_rv32_t *state) {
     emit_function_epilogue(state, state->saved_registers_mask);
     // c.jr ra
+    #ifdef __NO_RVC
+    asm_rv32_opcode_jalr(state,ASM_RV32_REG_X0,ASM_RV32_REG_RA,0);
+    #else
     asm_rv32_opcode_cjr(state, ASM_RV32_REG_RA);
+    #endif 
 }
 
 void asm_rv32_end_pass(asm_rv32_t *state) {
@@ -301,6 +330,8 @@ void asm_rv32_emit_call_ind(asm_rv32_t *state, mp_uint_t index) {
     mp_uint_t offset = index * ASM_WORD_SIZE;
     state->saved_registers_mask |= (1U << ASM_RV32_REG_RA);
 
+   
+    #ifndef __NO_RVC
     if (IS_IN_C_REGISTER_WINDOW(REG_FUN_TABLE) && IS_IN_C_REGISTER_WINDOW(INTERNAL_TEMPORARY) && FIT_UNSIGNED(offset, 6)) {
         // c.lw   temporary, offset(fun_table)
         // c.jalr temporary
@@ -308,12 +339,17 @@ void asm_rv32_emit_call_ind(asm_rv32_t *state, mp_uint_t index) {
         asm_rv32_opcode_cjalr(state, INTERNAL_TEMPORARY);
         return;
     }
+    #endif 
 
     if (FIT_UNSIGNED(offset, 11)) {
         // lw     temporary, offset(fun_table)
         // c.jalr temporary
         asm_rv32_opcode_lw(state, REG_TEMP2, REG_FUN_TABLE, offset);
-        asm_rv32_opcode_cjalr(state, REG_TEMP2);
+        #ifdef __NO_RVC
+            asm_rv32_opcode_jalr(state,ASM_RV32_REG_RA,REG_TEMP2,0);
+        #else
+            asm_rv32_opcode_cjalr(state, REG_TEMP2);
+        #endif
         return;
     }
 
@@ -326,9 +362,18 @@ void asm_rv32_emit_call_ind(asm_rv32_t *state, mp_uint_t index) {
     // lw     temporary, LO(index)(temporary)
     // c.jalr temporary
     load_upper_immediate(state, REG_TEMP2, upper);
-    asm_rv32_opcode_cadd(state, REG_TEMP2, REG_FUN_TABLE);
+    #ifdef __NO_RVC
+        asm_rv32_opcode_add(state, REG_TEMP2, REG_TEMP2, REG_FUN_TABLE);
+    #else
+        asm_rv32_opcode_cadd(state, REG_TEMP2, REG_FUN_TABLE);
+    #endif    
     asm_rv32_opcode_lw(state, REG_TEMP2, REG_TEMP2, lower);
-    asm_rv32_opcode_cjalr(state, REG_TEMP2);
+    #ifdef __NO_RVC
+        asm_rv32_opcode_jalr(state, ASM_RV32_REG_RA, REG_TEMP2,0);
+    #else
+        asm_rv32_opcode_cjalr(state, REG_TEMP2);
+    #endif 
+   
 }
 
 void asm_rv32_emit_jump_if_reg_eq(asm_rv32_t *state, mp_uint_t rs1, mp_uint_t rs2, mp_uint_t label) {
@@ -361,11 +406,16 @@ void asm_rv32_emit_jump_if_reg_nonzero(asm_rv32_t *state, mp_uint_t rs, mp_uint_
     ptrdiff_t displacement = 0;
     bool can_emit_short_jump = calculate_displacement_for_label(state, label, &displacement);
 
+
+    #ifndef __NO_RVC
+
     if (can_emit_short_jump && FIT_SIGNED(displacement, 8) && IS_IN_C_REGISTER_WINDOW(rs)) {
         // c.bnez rs', displacement
         asm_rv32_opcode_cbnez(state, MAP_IN_C_REGISTER_WINDOW(rs), displacement);
         return;
     }
+    #endif
+
 
     if (can_emit_short_jump && FIT_SIGNED(displacement, 13)) {
         // bne rs, zero, displacement
@@ -384,15 +434,19 @@ void asm_rv32_emit_jump_if_reg_nonzero(asm_rv32_t *state, mp_uint_t rs, mp_uint_
     //    jalr   zero, temporary, LO(displacement) ; PC + 8
     //    ...                                      ; PC + 12
 
+    #ifndef __NO_RVC
     if (can_emit_short_jump && IS_IN_C_REGISTER_WINDOW(rs)) {
         asm_rv32_opcode_cbeqz(state, MAP_IN_C_REGISTER_WINDOW(rs), 10);
         // Compensate for the C.BEQZ opcode.
         displacement -= ASM_HALFWORD_SIZE;
     } else {
+    #endif     
         asm_rv32_opcode_beq(state, rs, ASM_RV32_REG_ZERO, 12);
         // Compensate for the BEQ opcode.
         displacement -= ASM_WORD_SIZE;
+    #ifndef __NO_RVC    
     }
+    #endif
 
     mp_uint_t upper = 0;
     mp_uint_t lower = 0;
@@ -404,11 +458,13 @@ void asm_rv32_emit_jump_if_reg_nonzero(asm_rv32_t *state, mp_uint_t rs, mp_uint_
 void asm_rv32_emit_mov_local_reg(asm_rv32_t *state, mp_uint_t local, mp_uint_t rs) {
     mp_uint_t offset = state->locals_stack_offset + (local * ASM_WORD_SIZE);
 
+    #ifndef __NO_RVC
     if (FIT_UNSIGNED(offset >> 2, 6)) {
         // c.swsp rs, offset
         asm_rv32_opcode_cswsp(state, rs, offset);
         return;
     }
+    #endif
 
     if (FIT_UNSIGNED(offset, 11)) {
         // sw rs, offset(sp)
@@ -431,11 +487,14 @@ void asm_rv32_emit_mov_local_reg(asm_rv32_t *state, mp_uint_t local, mp_uint_t r
 void asm_rv32_emit_mov_reg_local(asm_rv32_t *state, mp_uint_t rd, mp_uint_t local) {
     mp_uint_t offset = state->locals_stack_offset + (local * ASM_WORD_SIZE);
 
+
+    #ifndef __NO_RVC
     if (FIT_UNSIGNED(offset >> 2, 6)) {
         // c.lwsp rd, offset
         asm_rv32_opcode_clwsp(state, rd, offset);
         return;
     }
+    #endif
 
     if (FIT_UNSIGNED(offset, 11)) {
         // lw rd, offset(sp)
@@ -458,11 +517,13 @@ void asm_rv32_emit_mov_reg_local(asm_rv32_t *state, mp_uint_t rd, mp_uint_t loca
 void asm_rv32_emit_mov_reg_local_addr(asm_rv32_t *state, mp_uint_t rd, mp_uint_t local) {
     mp_uint_t offset = state->locals_stack_offset + (local * ASM_WORD_SIZE);
 
+    #ifndef __NO_RVC
     if (FIT_UNSIGNED(offset, 10) && offset != 0 && IS_IN_C_REGISTER_WINDOW(rd)) {
         // c.addi4spn rd', offset
         asm_rv32_opcode_caddi4spn(state, MAP_IN_C_REGISTER_WINDOW(rd), offset);
         return;
     }
+    #endif 
 
     if (FIT_UNSIGNED(offset, 11)) {
         // addi rd, sp, offset
@@ -479,11 +540,14 @@ void asm_rv32_emit_mov_reg_local_addr(asm_rv32_t *state, mp_uint_t rd, mp_uint_t
 void asm_rv32_emit_load_reg_reg_offset(asm_rv32_t *state, mp_uint_t rd, mp_uint_t rs, mp_int_t offset) {
     mp_int_t scaled_offset = offset * sizeof(ASM_WORD_SIZE);
 
+
+    #ifndef __NO_RVC
     if (scaled_offset >= 0 && IS_IN_C_REGISTER_WINDOW(rd) && IS_IN_C_REGISTER_WINDOW(rs) && FIT_UNSIGNED(scaled_offset, 6)) {
         // c.lw rd', offset(rs')
         asm_rv32_opcode_clw(state, MAP_IN_C_REGISTER_WINDOW(rd), MAP_IN_C_REGISTER_WINDOW(rs), scaled_offset);
         return;
     }
+    #endif 
 
     if (FIT_SIGNED(scaled_offset, 12)) {
         // lw rd, offset(rs)
