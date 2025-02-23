@@ -571,9 +571,19 @@ void asm_rv32_emit_jump(asm_rv32_t *state, mp_uint_t label) {
     ptrdiff_t displacement = 0;
     bool can_emit_short_jump = calculate_displacement_for_label(state, label, &displacement);
 
+    #ifndef __NO_RVC
     if (can_emit_short_jump && FIT_SIGNED(displacement, 12)) {
         // c.j displacement
         asm_rv32_opcode_cj(state, displacement);
+        return;
+    }
+    #endif 
+
+    // New TH: Try jal 
+
+    if (can_emit_short_jump && FIT_SIGNED(displacement, 20)) {
+        // jal x0, displacement
+        asm_rv32_opcode_jal(state,ASM_RV32_REG_ZERO,displacement);
         return;
     }
 
@@ -642,11 +652,14 @@ void asm_rv32_emit_load16_reg_reg_offset(asm_rv32_t *state, mp_uint_t rd, mp_uin
 }
 
 void asm_rv32_emit_optimised_xor(asm_rv32_t *state, mp_uint_t rd, mp_uint_t rs) {
+
+    #ifndef __NO_RVC
     if (rs == rd) {
         // c.li rd, 0
         asm_rv32_opcode_cli(state, rd, 0);
         return;
     }
+    #endif
 
     // xor rd, rd, rs
     asm_rv32_opcode_xor(state, rd, rd, rs);
@@ -657,9 +670,9 @@ void asm_rv32_meta_comparison_eq(asm_rv32_t *state, mp_uint_t rs1, mp_uint_t rs2
     // beq  rs1, rs2, 6 ; PC + 0
     // c.li rd, 0       ; PC + 4
     // ...              ; PC + 6
-    asm_rv32_opcode_cli(state, rd, 1);
+    asm_rv32_opcode_li(state, rd, 1);
     asm_rv32_opcode_beq(state, rs1, rs2, 6);
-    asm_rv32_opcode_cli(state, rd, 0);
+    asm_rv32_opcode_li(state, rd, 0);
 }
 
 void asm_rv32_meta_comparison_ne(asm_rv32_t *state, mp_uint_t rs1, mp_uint_t rs2, mp_uint_t rd) {
@@ -683,7 +696,7 @@ void asm_rv32_meta_comparison_le(asm_rv32_t *state, mp_uint_t rs1, mp_uint_t rs2
     // beq    rs1, rs2, 8  ; PC + 0
     // slt(u) rd, rs1, rs2 ; PC + 4
     // ...                 ; PC + 8
-    asm_rv32_opcode_cli(state, rd, 1);
+    asm_rv32_opcode_li(state, rd, 1);
     asm_rv32_opcode_beq(state, rs1, rs2, 8);
     if (unsigned_comparison) {
         asm_rv32_opcode_sltu(state, rd, rs1, rs2);

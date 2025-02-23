@@ -58,6 +58,12 @@
 #define MICROPY_ALLOC_PATH_MAX            (256)
 #define MICROPY_ALLOC_PARSE_CHUNK_INIT    (16)
 
+// Native Code 
+#define MICROPY_EMIT_RV32 (1)
+#define MICROPY_MICROPY_RV32_UNCOMPRESSED   (1)
+// Seems to be needed, not sure why code in asmrv32.c does not set it
+#define MP_POPCOUNT __builtin_popcount
+
 // type definitions for the specific machine
 
 typedef intptr_t mp_int_t; // must be pointer size
