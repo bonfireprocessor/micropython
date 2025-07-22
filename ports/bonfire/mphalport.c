@@ -124,6 +124,21 @@ void bonfire_init_interrupts() {
     enable_irq(1);
 }
 
+void bonfire_invalidate_caches()
+{
+  #if defined(DCACHE_SIZE)
+  
+  uint32_t *pmem = (void*)(DRAM_TOP-DCACHE_SIZE+1);
+  
+  static volatile uint32_t sum=0; // To avoid optimizing away code below
+  
+    while ((uint32_t)pmem < DRAM_TOP) {
+      sum+= *pmem++;
+    }
+  #endif
+  
+}
+
 // Overload weak Trap Handler in gdb_stub
 
 trapframe_t* trap_handler(trapframe_t *ptf)

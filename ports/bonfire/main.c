@@ -163,7 +163,7 @@ void gc_collect(void) {
     soft_timer_gc_mark_all();
     gc_collect_end();
     
-    gc_dump_info(&mp_plat_print);
+    //gc_dump_info(&mp_plat_print);
 }
 #endif
 

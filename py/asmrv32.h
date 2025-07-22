@@ -34,6 +34,12 @@
 #include "py/misc.h"
 #include "py/persistentcode.h"
 
+#ifdef MICROPY_MICROPY_RV32_UNCOMPRESSED
+#pragma message "MICROPY_MICROPY_RV32_UNCOMPRESSED"
+#define __NO_RVC
+#endif
+
+
 #define ASM_RV32_REG_X0 (0)   // Zero
 #define ASM_RV32_REG_X1 (1)   // RA
 #define ASM_RV32_REG_X2 (2)   // SP
@@ -219,25 +225,41 @@ static inline void asm_rv32_opcode_bne(asm_rv32_t *state, mp_uint_t rs1, mp_uint
 // C.ADD RD, RS
 static inline void asm_rv32_opcode_cadd(asm_rv32_t *state, mp_uint_t rd, mp_uint_t rs) {
     // CR: 1001 ..... ..... 10
-    asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CR(0x02, 0x09, rd, rs));
+    #ifdef __NO_RVC
+        asm_rv32_opcode_add(state,rd,rd,rs);
+    #else    
+        asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CR(0x02, 0x09, rd, rs));
+    #endif    
 }
 
 // C.ADDI RD, IMMEDIATE
 static inline void asm_rv32_opcode_caddi(asm_rv32_t *state, mp_uint_t rd, mp_int_t immediate) {
     // CI: 000 . ..... ..... 01
-    asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CI(0x01, 0x00, rd, immediate));
+    #ifdef __NO_RVC
+        asm_rv32_opcode_addi(state,rd,rd,immediate);
+    #else    
+        asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CI(0x01, 0x00, rd, immediate));
+    #endif    
 }
+
+#ifndef __NO_RVC
+
+// Supress this instructions to avoid accidentaly emitting them
 
 // C.ADDI4SPN RD', IMMEDIATE
 static inline void asm_rv32_opcode_caddi4spn(asm_rv32_t *state, mp_uint_t rd, mp_uint_t immediate) {
-    // CIW: 000 ........ ... 00
+   
     asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CIW(0x00, 0x00, rd, immediate));
+    
 }
 
 // C.BEQZ RS', IMMEDIATE
 static inline void asm_rv32_opcode_cbeqz(asm_rv32_t *state, mp_uint_t rs, mp_int_t offset) {
     // CB: 110 ... ... ..... 01
+           
     asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CB(0x01, 0x06, rs, offset));
+        
+            
 }
 
 // C.BNEZ RS', IMMEDIATE
@@ -250,6 +272,14 @@ static inline void asm_rv32_opcode_cbnez(asm_rv32_t *state, mp_uint_t rs, mp_int
 static inline void asm_rv32_opcode_cj(asm_rv32_t *state, mp_int_t offset) {
     // CJ: 101 ........... 01
     asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CJ(0x01, 0x05, offset));
+}
+
+#endif
+
+// JAL RD, IMMEDIATE
+static inline void asm_rv32_opcode_jal(asm_rv32_t *state,mp_uint_t rd,mp_int_t offset)
+{
+    asm_rv32_emit_word_opcode(state,RV32_ENCODE_TYPE_J(0b11011,rd,offset));
 }
 
 // C.JALR RS
@@ -269,6 +299,21 @@ static inline void asm_rv32_opcode_cli(asm_rv32_t *state, mp_uint_t rd, mp_int_t
     // CI: 010 . ..... ..... 01
     asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CI(0x01, 0x02, rd, immediate));
 }
+
+// TH: LI pseudo instruction
+static inline void asm_rv32_opcode_li(asm_rv32_t *state, mp_uint_t rd, mp_int_t immediate) {
+    // CI: 010 . ..... ..... 01
+    #ifdef __NO_RVC
+    asm_rv32_opcode_addi(state,rd, ASM_RV32_REG_ZERO,immediate);
+    #else
+    asm_rv32_opcode_cli(state, rd, immediate);
+    #endif    
+
+}
+
+#ifndef __NO_RVC
+
+// Supress this instructions to avoid accidentaly emitting them
 
 // C.LUI RD, IMMEDIATE
 static inline void asm_rv32_opcode_clui(asm_rv32_t *state, mp_uint_t rd, mp_int_t immediate) {
@@ -299,6 +344,9 @@ static inline void asm_rv32_opcode_cswsp(asm_rv32_t *state, mp_uint_t rs, mp_uin
     // CSS: 010 ...... ..... 10
     asm_rv32_emit_halfword_opcode(state, RV32_ENCODE_TYPE_CSS(0x02, 0x06, rs, ((offset & 0xC0) >> 6) | (offset & 0x3C)));
 }
+
+#endif 
+
 
 // JALR RD, RS, offset
 static inline void asm_rv32_opcode_jalr(asm_rv32_t *state, mp_uint_t rd, mp_uint_t rs, mp_int_t offset) {
@@ -414,6 +462,8 @@ static inline void asm_rv32_opcode_xori(asm_rv32_t *state, mp_uint_t rd, mp_uint
     asm_rv32_emit_word_opcode(state, RV32_ENCODE_TYPE_I(0x13, 0x04, rd, rs, immediate));
 }
 
+
+
 #define ASM_WORD_SIZE (4)
 #define ASM_HALFWORD_SIZE (2)
 
@@ -478,7 +528,11 @@ void asm_rv32_emit_store_reg_reg_offset(asm_rv32_t *state, mp_uint_t source, mp_
 #define ASM_MOV_REG_LOCAL_ADDR(state, rd, local) asm_rv32_emit_mov_reg_local_addr(state, rd, local)
 #define ASM_MOV_REG_LOCAL(state, rd, local) asm_rv32_emit_mov_reg_local(state, rd, local)
 #define ASM_MOV_REG_PCREL(state, rd, label) asm_rv32_emit_mov_reg_pcrel(state, rd, label)
+#ifdef __NO_RVC
+#define ASM_MOV_REG_REG(state, rd, rs) asm_rv32_opcode_add(state, rd, ASM_RV32_REG_ZERO,rs)
+#else
 #define ASM_MOV_REG_REG(state, rd, rs) asm_rv32_opcode_cmv(state, rd, rs)
+#endif
 #define ASM_MUL_REG_REG(state, rd, rs) asm_rv32_opcode_mul(state, rd, rd, rs)
 #define ASM_NEG_REG(state, rd) asm_rv32_opcode_sub(state, rd, ASM_RV32_REG_ZERO, rd)
 #define ASM_NOT_REG(state, rd) asm_rv32_opcode_xori(state, rd, rd, -1)

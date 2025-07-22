@@ -128,6 +128,10 @@ void mp_emit_glue_assign_native(mp_raw_code_t *rc, mp_raw_code_kind_t kind, cons
     #endif
     #endif
 
+    #if MICROPY_EMIT_RV32 && defined(MICROPY_INVALIDATE_CACHES)
+    MICROPY_INVALIDATE_CACHES
+    #endif
+
     rc->kind = kind;
     rc->is_generator = (scope_flags & MP_SCOPE_FLAG_GENERATOR) != 0;
     rc->fun_data = fun_data;
