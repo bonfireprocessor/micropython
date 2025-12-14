@@ -38,11 +38,12 @@
 #ifndef MICROPY_HW_FLASH_STORAGE_BYTES
 #define MICROPY_HW_FLASH_STORAGE_BYTES (FLASH_FSSIZE)
 #endif
-static_assert(MICROPY_HW_FLASH_STORAGE_BYTES % 4096 == 0, "Flash storage size must be a multiple of 4K");
+static_assert(MICROPY_HW_FLASH_STORAGE_BYTES % 65536 == 0, "Flash storage size must be a multiple of 64K");
 
 #ifndef MICROPY_HW_FLASH_STORAGE_BASE
 #define MICROPY_HW_FLASH_STORAGE_BASE (FLASH_FSBASE)
 #endif
+static_assert(MICROPY_HW_FLASH_STORAGE_BASE % 65536 == 0, "Flash storage base must be aligned to 64K");
 
 #define STATIC static
 
@@ -189,11 +190,8 @@ STATIC mp_obj_t bonfire_flash_ioctl(mp_obj_t self_in, mp_obj_t cmd_in, mp_obj_t 
             if (!self->spiflash) {
                 self->spiflash=flash_init();
             }
-            SPIFLASH_erase(self->spiflash,self->flash_base + offset,BLOCK_SIZE_BYTES);
-            //flash_range_erase(self->flash_base + offset, BLOCK_SIZE_BYTES);
-            
-            // TODO check return value
-            return MP_OBJ_NEW_SMALL_INT(0);
+            uint32_t ret = SPIFLASH_erase(self->spiflash,self->flash_base + offset,BLOCK_SIZE_BYTES);
+            return MP_OBJ_NEW_SMALL_INT(ret);
         }
         default:
             return mp_const_none;
